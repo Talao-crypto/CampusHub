@@ -1,0 +1,13 @@
+import type { MetadataRoute } from "next";
+export default function manifest(): MetadataRoute.Manifest {
+  return {
+    name: "CampusHub — seu semestre, em dia", short_name: "CampusHub", lang: "pt-BR",
+    description: "Planejamento acadêmico pessoal. Projeto independente.",
+    start_url: "/dashboard", scope: "/", display: "standalone", background_color: "#f6f7fb", theme_color: "#4f46e5",
+    icons: [
+      { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+      { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+      { src: "/icons/icon-maskable.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+    ],
+  };
+}

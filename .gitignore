@@ -1,0 +1,59 @@
+# Dependências, compilação e código gerado
+node_modules/
+.next/
+out/
+dist/
+build/
+src/generated/
+*.tsbuildinfo
+
+# Testes, caches e logs locais
+coverage/
+playwright-report/
+test-results/
+blob-report/
+.cache/
+.npm/
+.eslintcache
+logs/
+*.log
+
+# Configurações locais e credenciais
+.env*
+!.env.example
+.aws/
+.codex/
+.agents/
+.ssh/
+/credentials/
+/secrets/
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+id_rsa
+id_ed25519
+
+# Dados e cópias locais do banco; preservar as migrations SQL
+/data/
+/.pgdata/
+/postgres-data/
+/backups/
+*.dump
+*.backup
+*.sql.gz
+*.db
+*.sqlite
+*.sqlite3
+*.sqlite3-*
+
+# Arquivos locais do editor e do sistema
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db

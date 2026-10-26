@@ -1,0 +1,135 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+  moduleFormat = "esm"
+  importFileExtension = "js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum AttendanceUnit {
+  SESSION
+  HOUR
+}
+
+enum GradeRounding {
+  HALF_UP
+  TRUNCATE
+}
+
+enum TaskStatus {
+  TODO
+  DONE
+}
+
+model User {
+  id          String              @id @default(cuid())
+  name        String
+  createdAt   DateTime            @default(now())
+  subjects    SubjectDefinition[]
+  terms       AcademicTerm[]
+  offerings   ClassOffering[]
+  tasks       Task[]
+}
+
+model Institution {
+  id       String              @id @default(cuid())
+  slug     String              @unique
+  name     String
+  subjects SubjectDefinition[]
+  terms    AcademicTerm[]
+}
+
+model SubjectDefinition {
+  id            String          @id @default(cuid())
+  ownerId       String
+  institutionId String
+  code          String
+  name          String
+  owner         User            @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  institution   Institution     @relation(fields: [institutionId], references: [id])
+  offerings     ClassOffering[]
+
+  @@unique([id, ownerId])
+  @@unique([ownerId, institutionId, code])
+}
+
+model AcademicTerm {
+  id            String          @id @default(cuid())
+  ownerId       String
+  institutionId String
+  label         String
+  owner         User            @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  institution   Institution     @relation(fields: [institutionId], references: [id])
+  offerings     ClassOffering[]
+
+  @@unique([id, ownerId])
+  @@unique([ownerId, institutionId, label])
+}
+
+model ClassOffering {
+  id                 String            @id @default(cuid())
+  ownerId            String
+  subjectId          String
+  termId             String
+  color              String            @default("indigo")
+  attendanceUnit     AttendanceUnit    @default(SESSION)
+  totalUnits         Int
+  minAttendanceBps   Int               @default(7500)
+  gradeMaxUnits      Int               @default(100000)
+  gradeThresholdUnits Int              @default(60000)
+  gradeDecimals      Int               @default(2)
+  gradeRounding      GradeRounding     @default(HALF_UP)
+  createdAt          DateTime          @default(now())
+  owner              User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  subject            SubjectDefinition @relation(fields: [subjectId, ownerId], references: [id, ownerId], onDelete: Cascade)
+  term               AcademicTerm      @relation(fields: [termId, ownerId], references: [id, ownerId], onDelete: Cascade)
+  absences           Absence[]
+  assessments        Assessment[]
+  tasks              Task[]
+
+  @@unique([id, ownerId])
+  @@unique([ownerId, subjectId, termId])
+  @@index([ownerId, createdAt])
+}
+
+model Absence {
+  id         String        @id @default(cuid())
+  ownerId    String
+  offeringId String
+  date       DateTime      @db.Date
+  units      Int
+  note       String?
+  offering   ClassOffering @relation(fields: [offeringId, ownerId], references: [id, ownerId], onDelete: Cascade)
+
+  @@index([offeringId, ownerId, date])
+}
+
+model Assessment {
+  id         String        @id @default(cuid())
+  ownerId    String
+  offeringId String
+  name       String
+  weightBps  Int
+  scoreUnits Int?
+  createdAt  DateTime      @default(now())
+  offering   ClassOffering @relation(fields: [offeringId, ownerId], references: [id, ownerId], onDelete: Cascade)
+
+  @@index([offeringId, ownerId, createdAt])
+}
+
+model Task {
+  id         String         @id @default(cuid())
+  ownerId    String
+  offeringId String?
+  title      String
+  dueDate    DateTime       @db.Date
+  status     TaskStatus     @default(TODO)
+  createdAt  DateTime       @default(now())
+  owner      User           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  offering   ClassOffering? @relation(fields: [offeringId, ownerId], references: [id, ownerId], onDelete: NoAction)
+
+  @@index([ownerId, status, dueDate])
+}

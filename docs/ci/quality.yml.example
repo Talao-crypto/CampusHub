@@ -1,0 +1,41 @@
+# Modelo inativo: não colocar em .github/workflows antes de validar os comandos.
+# Após gerar e revisar package-lock.json, substituir npm install por npm ci.
+# Os valores abaixo são fixtures de um banco efêmero de CI, sem dados reais.
+name: Quality
+on: [push, pull_request]
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: campushub
+          POSTGRES_PASSWORD: ci_only_password
+          POSTGRES_DB: campushub_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U campushub -d campushub_test"
+          --health-interval 3s --health-timeout 3s --health-retries 20
+    env:
+      DATABASE_URL: postgresql://campushub:ci_only_password@127.0.0.1:5432/campushub_test?schema=public
+      DEMO_MODE: "true"
+      DEMO_SESSION_SECRET: ci-only-session-secret-never-for-production-123456
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      # Usar npm ci depois da validação e do commit do lockfile.
+      - run: npm install
+      - run: npm run db:migrate
+      - run: npm run db:seed
+      - run: npm run check
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
